@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading Bot - System Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
+            color: #e0e0e0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #1a2332;
+            padding-bottom: 10px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: #1a2332;
+            border: 1px solid #2a3a52;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #888;
+        }
+
+        .nav-tab:hover {
+            background: #2a3a52;
+            color: #00ff88;
+        }
+
+        .nav-tab.active {
+            background: #00ff88;
+            color: #0a0e1a;
+            border-color: #00ff88;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .architecture-diagram {
+            background: #0f1621;
+            border: 2px solid #2a3a52;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .layer {
+            background: linear-gradient(135deg, #1a2332 0%, #0f1621 100%);
+            border: 2px solid #2a3a52;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .layer-title {
+            color: #00ff88;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .layer-title::before {
+            content: '▶';
+            color: #00ff88;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .component {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .component-name {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+
+        .component-desc {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .flow-diagram {
+            background: #0f1621;
+            border: 2px solid #2a3a52;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.05);
+            border-left: 4px solid #00ff88;
+            border-radius: 8px;
+        }
+
+        .flow-number {
+            background: #00ff88;
+            color: #0a0e1a;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .flow-content {
+            flex: 1;
+        }
+
+        .flow-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .flow-desc {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .module-detail {
+            background: #1a2332;
+            border: 1px solid #2a3a52;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .module-header {
+            color: #00ff88;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(0, 255, 136, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .module-section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            color: #00ccff;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .section-content {
+            color: #aaa;
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+
+        .section-content li {
+            margin-bottom: 5px;
+        }
+
+        .data-flow-arrow {
+            text-align: center;
+            color: #00ff88;
+            font-size: 2rem;
+            margin: 10px 0;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tech-item {
+            background: linear-gradient(135deg, #1a2332 0%, #0f1621 100%);
+            border: 1px solid #2a3a52;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .tech-name {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .tech-purpose {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .code-block {
+            background: #0a0e1a;
+            border: 1px solid #2a3a52;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: #00ccff;
+            font-weight: bold;
+        }
+
+        .warning {
+            background: rgba(255, 170, 0, 0.1);
+            border-left: 4px solid #ffaa00;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #ffaa00;
+        }
+
+        .svg-diagram {
+            width: 100%;
+            height: auto;
+            background: #0f1621;
+            border: 2px solid #2a3a52;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .diagram-node {
+            fill: #1a2332;
+            stroke: #00ff88;
+            stroke-width: 2;
+        }
+
+        .diagram-text {
+            fill: #00ff88;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .diagram-arrow {
+            stroke: #00ff88;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .diagram-label {
+            fill: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Trading Bot - System Architecture</h1>
+        <p class="subtitle">Production-Grade Pine Script Trading System with MT5 Integration</p>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('overview')">📊 Overview</div>
+            <div class="nav-tab" onclick="switchTab('architecture')">🏗️ Architecture Layers</div>
+            <div class="nav-tab" onclick="switchTab('dataflow')">🔄 Data Flow</div>
+            <div class="nav-tab" onclick="switchTab('modules')">📦 Module Details</div>
+            <div class="nav-tab" onclick="switchTab('techstack')">⚙️ Tech Stack</div>
+            <div class="nav-tab" onclick="switchTab('deployment')">🚀 Deployment</div>
+        </div>
+
+        <!-- OVERVIEW TAB -->
+        <div class="tab-content active" id="overview">
+            <div class="architecture-diagram">
+                <h2 style="color: #00ff88; margin-bottom: 20px;">System Architecture - High Level View</h2>
+                
+                <svg class="svg-diagram" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#00ff88" />
+                        </marker>
+                    </defs>
+                    
+                    <!-- USER INTERFACE LAYER -->
+                    <rect x="50" y="50" width="1100" height="120" class="diagram-node" rx="10"/>
+                    <text x="600" y="90" class="diagram-text" text-anchor="middle">USER INTERFACE LAYER</text>
+                    <text x="150" y="120" class="diagram-label">Pine Script Editor</text>
+                    <text x="350" y="120" class="diagram-label">Strategy Manager</text>
+                    <text x="550" y="120" class="diagram-label">Configuration Panel</text>
+                    <text x="750" y="120" class="diagram-label">Monitoring Dashboard</text>
+                    <text x="950" y="120" class="diagram-label">Live Chart Viewer</text>
+                    
+                    <!-- MAIN CONTROLLER -->
+                    <rect x="450" y="220" width="300" height="80" class="diagram-node" rx="10"/>
+                    <text x="600" y="265" class="diagram-text" text-anchor="middle">main.py</text>
+                    <text x="600" y="285" class="diagram-label" text-anchor="middle">Central Orchestrator</text>
+                    
+                    <!-- Arrows from UI to main.py -->
+                    <path d="M 300 170 L 550 220" class="diagram-arrow"/>
+                    <path d="M 900 170 L 650 220" class="diagram-arrow"/>
+                    
+                    <!-- CORE ENGINE LAYER -->
+                    <rect x="50" y="350" width="350" height="180" class="diagram-node" rx="10"/>
+                    <text x="225" y="380" class="diagram-text" text-anchor="middle">PINE SCRIPT ENGINE</text>
+                    <text x="100" y="410" class="diagram-label">Parser</text>
+                    <text x="100" y="435" class="diagram-label">Validator</text>
+                    <text x="100" y="460" class="diagram-label">Interpreter</text>
+                    <text x="100" y="485" class="diagram-label">Visual Mapper</text>
+                    <text x="100" y="510" class="diagram-label">Indicator Engine</text>
+                    
+                    <rect x="450" y="350" width="300" height="180" class="diagram-node" rx="10"/>
+                    <text x="600" y="380" class="diagram-text" text-anchor="middle">TRADING ENGINE</text>
+                    <text x="500" y="410" class="diagram-label">Signal Generator</text>
+                    <text x="500" y="435" class="diagram-label">Risk Manager</text>
+                    <text x="500" y="460" class="diagram-label">Order Executor</text>
+                    <text x="500" y="485" class="diagram-label">Position Manager</text>
+                    <text x="500" y="510" class="diagram-label">Trade Logger</text>
+                    
+                    <rect x="800" y="350" width="350" height="180" class="diagram-node" rx="10"/>
+                    <text x="975" y="380" class="diagram-text" text-anchor="middle">VISUALIZATION ENGINE</text>
+                    <text x="850" y="410" class="diagram-label">Chart Renderer</text>
+                    <text x="850" y="435" class="diagram-label">Indicator Overlay</text>
+                    <text x="850" y="460" class="diagram-label">Signal Markers</text>
+                    <text x="850" y="485" class="diagram-label">Real-time Updater</text>
+                    <text x="850" y="510" class="diagram-label">Performance Metrics</text>
+                    
+                    <!-- Arrows from main.py to engines -->
+                    <path d="M 550 300 L 225 350" class="diagram-arrow"/>
+                    <path d="M 600 300 L 600 350" class="diagram-arrow"/>
+                    <path d="M 650 300 L 975 350" class="diagram-arrow"/>
+                    
+                    <!-- DATA & BROKER LAYER -->
+                    <rect x="50" y="580" width="350" height="120" class="diagram-node" rx="10"/>
+                    <text x="225" y="620" class="diagram-text" text-anchor="middle">DATA MANAGER</text>
+                    <text x="100" y="650" class="diagram-label">Market Data Feed</text>
+                    <text x="100" y="675" class="diagram-label">Historical Data Cache</text>
+                    
+                    <rect x="450" y="580" width="300" height="120" class="diagram-node" rx="10"/>
+                    <text x="600" y="620" class="diagram-text" text-anchor="middle">MT5 CONNECTOR</text>
+                    <text x="500" y="650" class="diagram-label">Connection Manager</text>
+                    <text x="500" y="675" class="diagram-label">Trade Execution API</text>
+                    
+                    <rect x="800" y="580" width="350" height="120" class="diagram-node" rx="10"/>
+                    <text x="975" y="620" class="diagram-text" text-anchor="middle">STORAGE & LOGGING</text>
+                    <text x="850" y="650" class="diagram-label">Strategy Repository</text>
+                    <text x="850" y="675" class="diagram-label">Trade History DB</text>
+                    
+                    <!-- Arrows to data layer -->
+                    <path d="M 225 530 L 225 580" class="diagram-arrow"/>
+                    <path d="M 600 530 L 600 580" class="diagram-arrow"/>
+                    <path d="M 975 530 L 975 580" class="diagram-arrow"/>
+                    
+                    <!-- MT5 BROKER -->
+                    <rect x="450" y="750" width="300" height="40" class="diagram-node" rx="10"/>
+                    <text x="600" y="775" class="diagram-text" text-anchor="middle">MetaTrader 5 Platform</text>
+                    
+                    <path d="M 600 700 L 600 750" class="diagram-arrow"/>
+                </svg>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Key Architectural Principles:</strong><br>
+                • main.py is the single entry point and orchestrator<br>
+                • All modules are loosely coupled and independently testable<br>
+                • Pine Script interpretation happens at runtime, no hardcoded strategies<br>
+                • Real-time visualization is decoupled from trading logic<br>
+                • Multi-threaded design for concurrent operations
+            </div>
+        </div>
+
+        <!-- ARCHITECTURE LAYERS TAB -->
+        <div class="tab-content" id="architecture">
+            <div class="layer">
+                <div class="layer-title">Layer 1: User Interface (UI)</div>
+                <div class="components-grid">
+                    <div class="component">
+                        <div class="component-name">📝 Pine Script Editor</div>
+                        <div class="component-desc">
+                            Web-based code editor for pasting and editing Pine Script strategies. 
+                            Syntax highlighting, validation feedback, and save functionality.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📚 Strategy Manager</div>
+                        <div class="component-desc">
+                            Display all saved strategies with metadata (name, creation date, performance). 
+                            Activate, deactivate, edit, or delete strategies.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">⚙️ Configuration Panel</div>
+                        <div class="component-desc">
+                            Pre-start configuration: symbol selection, timeframe, risk parameters, 
+                            MT5 credentials, position sizing, and execution mode.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📊 Monitoring Dashboard</div>
+                        <div class="component-desc">
+                            Real-time display of bot status, active positions, trade history, 
+                            P&L, and system logs. Emergency stop controls.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📈 Live Chart Viewer</div>
+                        <div class="component-desc">
+                            Real-time candlestick chart with indicators, entry/exit markers, 
+                            and visual components from active Pine Script.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">✅ Pre-Start Confirmation</div>
+                        <div class="component-desc">
+                            Summary of all settings before bot activation. Shows active strategy, 
+                            symbol, risk limits, and connection status.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layer">
+                <div class="layer-title">Layer 2: Central Controller (main.py)</div>
+                <div class="components-grid">
+                    <div class="component">
+                        <div class="component-name">🎮 Application Orchestrator</div>
+                        <div class="component-desc">
+                            Single entry point that initializes all modules, manages lifecycle, 
+                            coordinates between UI, engines, and data layers.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🔄 Event Loop Manager</div>
+                        <div class="component-desc">
+                            Manages the main event loop, handles user actions (start/stop/switch), 
+                            coordinates between threads for UI, trading, and visualization.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🚨 Emergency Controller</div>
+                        <div class="component-desc">
+                            Implements kill switch, safe shutdown procedures, handles MT5 disconnections, 
+                            and ensures graceful error recovery.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📡 State Manager</div>
+                        <div class="component-desc">
+                            Maintains global application state: active strategy, selected symbol, 
+                            bot status (idle/running/stopped), and configuration.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layer">
+                <div class="layer-title">Layer 3: Core Engines</div>
+                <div class="components-grid">
+                    <div class="component">
+                        <div class="component-name">🌲 Pine Script Parser</div>
+                        <div class="component-desc">
+                            Tokenizes and parses Pine Script code into AST (Abstract Syntax Tree). 
+                            Identifies indicators, conditions, strategy calls, and visual components.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">✔️ Pine Script Validator</div>
+                        <div class="component-desc">
+                            Validates syntax, checks for unsupported features, verifies indicator parameters, 
+                            and reports errors before execution.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">⚡ Pine Script Interpreter</div>
+                        <div class="component-desc">
+                            Executes parsed Pine Script logic on incoming market data. Calculates indicators, 
+                            evaluates conditions, generates signals in real-time.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📊 Indicator Calculator</div>
+                        <div class="component-desc">
+                            Implements Pine Script indicators (SMA, EMA, RSI, MACD, Bollinger Bands, etc.). 
+                            Uses NumPy/Pandas for efficient computation.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🎯 Signal Generator</div>
+                        <div class="component-desc">
+                            Evaluates strategy conditions and generates buy/sell signals. 
+                            Tracks entry/exit logic from Pine Script strategy.entry/exit calls.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🛡️ Risk Manager</div>
+                        <div class="component-desc">
+                            Enforces position sizing, stop-loss, take-profit, daily loss limits, 
+                            max drawdown, and concurrent position constraints.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📤 Order Executor</div>
+                        <div class="component-desc">
+                            Sends validated orders to MT5 via connector. Handles order types 
+                            (market, limit, stop), prevents duplicate orders, tracks execution.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">💼 Position Manager</div>
+                        <div class="component-desc">
+                            Tracks open positions, monitors P&L, manages position lifecycle, 
+                            coordinates with MT5 for position updates.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layer">
+                <div class="layer-title">Layer 4: Visualization Engine</div>
+                <div class="components-grid">
+                    <div class="component">
+                        <div class="component-name">📈 Chart Renderer</div>
+                        <div class="component-desc">
+                            Renders real-time candlestick charts using Plotly/Matplotlib. 
+                            Updates on each candle close with live price data.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📐 Indicator Overlay</div>
+                        <div class="component-desc">
+                            Plots indicators from Pine Script on the chart (lines, histograms, areas). 
+                            Maps Pine Script plot() calls to visual elements.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🎨 Signal Marker</div>
+                        <div class="component-desc">
+                            Places entry/exit markers on chart based on strategy signals. 
+                            Implements plotshape, plotchar from Pine Script.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🔄 Real-Time Updater</div>
+                        <div class="component-desc">
+                            Continuously updates chart as new candles form. Non-blocking updates 
+                            that don't interfere with trading logic execution.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layer">
+                <div class="layer-title">Layer 5: Data & Broker Integration</div>
+                <div class="components-grid">
+                    <div class="component">
+                        <div class="component-name">📡 MT5 Connector</div>
+                        <div class="component-desc">
+                            Python interface to MetaTrader 5 using MetaTrader5 package. 
+                            Handles connection, authentication, and API calls.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📊 Market Data Feed</div>
+                        <div class="component-desc">
+                            Subscribes to live tick/candle data for selected symbol(s). 
+                            Implements data buffering and synchronization.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">💾 Historical Data Cache</div>
+                        <div class="component-desc">
+                            Loads historical candles for indicator warmup period. 
+                            Caches data to reduce MT5 API calls.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">🗄️ Strategy Repository</div>
+                        <div class="component-desc">
+                            Stores saved Pine Script strategies in JSON/SQLite. 
+                            Manages strategy metadata and versioning.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📝 Trade Logger</div>
+                        <div class="component-desc">
+                            Logs all trades, signals, errors to file/database. 
+                            Provides audit trail for compliance and analysis.
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">📈 Performance Tracker</div>
+                        <div class="component-desc">
+                            Calculates strategy performance metrics: win rate, profit factor, 
+                            Sharpe ratio, max drawdown, total P&L.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA FLOW TAB -->
+        <div class="tab-content" id="dataflow">
+            <h2 style="color: #00ff88; margin-bottom: 20px;">Complete Data Flow Diagram</h2>
+            
+            <div class="flow-diagram">
+                    <h3 style="color: #00ccff; margin-bottom: 20px;">1. Initialization and User Setup Phase</h3>
+                
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <div class="flow-title">User Launches Application (main.py)</div>
+                        <div class="flow-desc">
+                            • Initializes UI framework (Flask/Dash/Streamlit)<br>
+                            • Loads configuration from config.yaml<br>
+                            • Initializes all core modules<br>
+                            • Displays UI with Pine Script Editor, Strategy Manager
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <div class="flow-title">User Creates/Selects Pine Script Strategy</div>
+                        <div class="flow-desc">
+                            • User pastes Pine Script code into editor<br>
+                            • Clicks "Validate" → Pine Script Parser analyzes code<br>
+                            • Validator checks syntax and reports errors/warnings<br>
+                            • User saves strategy → Stored in Strategy Repository
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <div class="flow-title">User Configures Trading Parameters</div>
+                        <div class="flow-desc">
+                            • Selects symbol (e.g., EURUSD) and timeframe (e.g., M15)<br>
+                            • Sets risk parameters: position size, stop loss, max trades<br>
+                            • Configures MT5 connection: account number, server<br>
+                            • All settings stored in State Manager
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Pre-Start Confirmation</div>
+                        <div class="flow-desc">
+                            • System displays confirmation panel with all settings<br>
+                            • Shows: Active strategy, symbol, timeframe, risk limits, MT5 status<br>
+                            • User reviews and clicks "START TRADING BOT"
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-diagram">
+
+                <h3 style="color: #00ccff; margin-bottom: 20px;">2. Trading Execution Phase</h3>
+                
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Bot Starts & Connects to MT5</div>
+                        <div class="flow-desc">
+                            • MT5 Connector establishes connection to MetaTrader 5<br>
+                            • Verifies account credentials and retrieves account info<br>
+                            • Subscribes to market data feed for selected symbol<br>
+                            • Loads historical candles for indicator warmup period
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">6</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Pine Script Interpreter Initializes</div>
+                        <div class="flow-desc">
+                            • Loads active strategy from repository<br>
+                            • Parses Pine Script into executable components<br>
+                            • Initializes indicator calculators with historical data<br>
+                            • Prepares visual mapping for chart rendering
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">7</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Real-Time Market Data Loop Begins</div>
+                        <div class="flow-desc">
+                            • On each new candle: Market Data Feed → Pine Script Interpreter<br>
+                            • Interpreter calculates all indicators from Pine Script<br>
+                            • Evaluates entry/exit conditions<br>
+                            • Generates signals if conditions met
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">8</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Signal Processing & Risk Check</div>
+                        <div class="flow-desc">
+                            • Signal Generator passes signal to Risk Manager<br>
+                            • Risk Manager validates: position limits, daily loss, drawdown<br>
+                            • If approved → Signal sent to Order Executor<br>
+                            • If rejected → Log reason and wait for next signal
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">9</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Order Execution</div>
+                        <div class="flow-desc">
+                            • Order Executor sends trade request to MT5 Connector<br>
+                            • MT5 Connector executes order on MetaTrader 5<br>
+                            • Receives order confirmation (ticket number, fill price)<br>
+                            • Position Manager updates open positions list
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">10</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Visualization Update</div>
+                        <div class="flow-desc">
+                            • Chart Renderer updates candlestick chart with new candle<br>
+                            • Indicator Overlay plots indicator values from interpreter<br>
+                            • Signal Marker adds entry/exit markers at signal points<br>
+                            • Dashboard updates with current positions and P&L
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-number">11</div>
+                    <div class="flow-content">
+                        <div class="flow-title">Continuous Monitoring Loop</div>
+                        <div class="flow-desc">
+                            • System continuously monitors open positions<br>
+                            • Checks for exit signals from Pine Script strategy<br>
+                            • Updates P&L in real-time<br>
+                            • Logs all activities to Trade Logger
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULES TAB -->
+        <div class="tab-content" id="modules">
+            <h2 style="color: #00ff88; margin-bottom: 20px;">Detailed Module Specifications</h2>
+
+            <div class="module-detail">
+                <div class="module-header">📄 main.py - Central Controller</div>
+                <div class="module-section">
+                    <div class="section-title">Responsibilities:</div>
+                    <div class="section-content">
+                        • Application entry point and lifecycle manager<br>
+                        • Initializes all modules in correct order<br>
+                        • Manages event loops for UI, trading, and visualization<br>
+                        • Handles user commands (start, stop, switch strategy)<br>
+                        • Implements emergency shutdown procedures
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">Key Functions:</div>
+                    <div class="section-content">
+                        • initialize_system() - Load config, init modules<br>
+                        • start_bot() - Begin trading operations<br>
+                        • stop_bot() - Graceful shutdown<br>
+                        • switch_strategy() - Change active strategy safely<br>
+                        • emergency_stop() - Immediate halt and position closure
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">🌲 pine_script_engine.py</div>
+                <div class="module-section">
+                    <div class="section-title">Components:</div>
+                    <div class="section-content">
+                        <strong>PineScriptParser:</strong><br>
+                        • Tokenizes Pine Script code using regex/lexer<br>
+                        • Builds AST for indicators, conditions, strategy calls<br>
+                        • Extracts input parameters, plot configurations<br><br>
+                        
+                        <strong>PineScriptValidator:</strong><br>
+                        • Checks syntax against Pine Script v5 spec<br>
+                        • Validates indicator parameters and functions<br>
+                        • Reports unsupported features with line numbers<br><br>
+                        
+                        <strong>PineScriptInterpreter:</strong><br>
+                        • Executes parsed Pine Script on live data<br>
+                        • Maintains indicator state across candles<br>
+                        • Evaluates conditions and generates signals<br>
+                        • Maps visual components to chart elements
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">📊 indicator_library.py</div>
+                <div class="module-section">
+                    <div class="section-title">Supported Indicators:</div>
+                    <div class="section-content">
+                        • ta.sma() - Simple Moving Average<br>
+                        • ta.ema() - Exponential Moving Average<br>
+                        • ta.rsi() - Relative Strength Index<br>
+                        • ta.macd() - Moving Average Convergence Divergence<br>
+                        • ta.bb() - Bollinger Bands<br>
+                        • ta.atr() - Average True Range<br>
+                        • ta.stoch() - Stochastic Oscillator<br>
+                        • ta.cci() - Commodity Channel Index<br>
+                        • ta.adx() - Average Directional Index<br>
+                        • ta.crossover() / ta.crossunder() - Crossover detection
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">Implementation:</div>
+                    <div class="section-content">
+                        • Uses pandas for efficient series operations<br>
+                        • Uses ta-lib or pandas_ta for indicator calculations<br>
+                        • Maintains rolling windows for lookback periods<br>
+                        • Optimized for real-time streaming data
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">🎯 trading_engine.py</div>
+                <div class="module-section">
+                    <div class="section-title">SignalGenerator:</div>
+                    <div class="section-content">
+                        • Receives indicator values from interpreter<br>
+                        • Evaluates entry/exit conditions from Pine Script<br>
+                        • Generates BUY/SELL/CLOSE signals with metadata<br>
+                        • Prevents duplicate signals on same candle
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">RiskManager:</div>
+                    <div class="section-content">
+                        • Validates position size against account balance<br>
+                        • Checks daily loss limit and max drawdown<br>
+                        • Enforces max concurrent positions<br>
+                        • Calculates stop-loss and take-profit levels<br>
+                        • Can reject signals that violate risk rules
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">OrderExecutor:</div>
+                    <div class="section-content">
+                        • Formats orders for MT5 API specification<br>
+                        • Sends orders via MT5 Connector<br>
+                        • Handles order confirmations and errors<br>
+                        • Implements retry logic for failed orders<br>
+                        • Logs all order activity
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">PositionManager:</div>
+                    <div class="section-content">
+                        • Tracks all open positions in memory<br>
+                        • Monitors P&L in real-time<br>
+                        • Coordinates position closure with exit signals<br>
+                        • Syncs with MT5 for position updates
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">📈 visualization_engine.py</div>
+                <div class="module-section">
+                    <div class="section-title">ChartRenderer:</div>
+                    <div class="section-content">
+                        • Creates candlestick charts using Plotly/Matplotlib<br>
+                        • Updates chart on each new candle (non-blocking)<br>
+                        • Manages chart timeframe and zoom levels<br>
+                        • Runs in separate thread to avoid blocking trading
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">IndicatorOverlay:</div>
+                    <div class="section-content">
+                        • Plots indicator lines/histograms from Pine Script<br>
+                        • Maps plot() calls to chart traces<br>
+                        • Handles multiple indicators with different scales<br>
+                        • Applies colors and styles from Pine Script
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">SignalMarker:</div>
+                    <div class="section-content">
+                        • Places markers at entry/exit points<br>
+                        • Implements plotshape, plotchar, plotarrow<br>
+                        • Uses different shapes/colors for buy/sell<br>
+                        • Displays signal labels and prices
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">🔌 mt5_connector.py</div>
+                <div class="module-section">
+                    <div class="section-title">Key Functions:</div>
+                    <div class="section-content">
+                        • connect() - Establish MT5 connection<br>
+                        • get_account_info() - Retrieve balance, equity, margin<br>
+                        • subscribe_symbol() - Subscribe to market data<br>
+                        • get_historical_data() - Load past candles<br>
+                        • get_live_ticks() - Stream real-time ticks<br>
+                        • send_order() - Execute market/limit/stop orders<br>
+                        • get_positions() - Retrieve open positions<br>
+                        • close_position() - Close specific position<br>
+                        • disconnect() - Clean disconnection
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">Error Handling:</div>
+                    <div class="section-content">
+                        • Implements connection retry with exponential backoff<br>
+                        • Handles MT5 errors (insufficient margin, invalid symbol)<br>
+                        • Queues orders during temporary disconnections<br>
+                        • Logs all API interactions for debugging
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">💾 data_manager.py</div>
+                <div class="module-section">
+                    <div class="section-title">MarketDataFeed:</div>
+                    <div class="section-content">
+                        • Subscribes to live data from MT5<br>
+                        • Converts ticks to candles (OHLCV)<br>
+                        • Buffers data for indicator calculations<br>
+                        • Emits candle_closed events for trading logic
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">HistoricalDataCache:</div>
+                    <div class="section-content">
+                        • Loads historical candles on startup<br>
+                        • Caches data in pandas DataFrame<br>
+                        • Provides warmup data for indicators<br>
+                        • Reduces MT5 API calls
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">📝 storage.py</div>
+                <div class="module-section">
+                    <div class="section-title">StrategyRepository:</div>
+                    <div class="section-content">
+                        • Saves/loads Pine Script strategies as JSON<br>
+                        • Stores metadata (name, creation date, performance)<br>
+                        • Implements versioning for strategy changes<br>
+                        • Provides list/search/filter capabilities
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">TradeLogger:</div>
+                    <div class="section-content">
+                        • Logs all trades to SQLite/PostgreSQL database<br>
+                        • Records: timestamp, symbol, type, entry, exit, P&L<br>
+                        • Provides query interface for analysis<br>
+                        • Exports to CSV for external analysis
+                    </div>
+                </div>
+                <div class="module-section">
+                    <div class="section-title">SystemLogger:</div>
+                    <div class="section-content">
+                        • Logs system events (start/stop, errors, warnings)<br>
+                        • Uses Python logging module with rotating files<br>
+                        • Configurable log levels (DEBUG, INFO, WARNING, ERROR)<br>
+                        • Displays logs in monitoring dashboard
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TECH STACK TAB -->
+        <div class="tab-content" id="techstack">
+            <h2 style="color: #00ff88; margin-bottom: 30px;">Technology Stack</h2>
+
+            <div class="module-detail">
+                <div class="module-header">Core Python Libraries</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">Python 3.10+</div>
+                        <div class="tech-purpose">Primary language for entire system</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">MetaTrader5</div>
+                        <div class="tech-purpose">Official MT5 Python API for broker connection</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">pandas</div>
+                        <div class="tech-purpose">Time series data manipulation and OHLCV handling</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">numpy</div>
+                        <div class="tech-purpose">Numerical computations for indicators</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">pandas_ta / ta-lib</div>
+                        <div class="tech-purpose">Technical analysis indicator library</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">UI Framework Options</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">Streamlit</div>
+                        <div class="tech-purpose">Rapid prototyping, simple deployment (Recommended)</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Dash (Plotly)</div>
+                        <div class="tech-purpose">Advanced interactive dashboards and charts</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Flask + React</div>
+                        <div class="tech-purpose">Full-featured web app with custom UI</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">PyQt5/PySide6</div>
+                        <div class="tech-purpose">Desktop application with native UI</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">Visualization & Charting</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">Plotly</div>
+                        <div class="tech-purpose">Interactive candlestick charts with zoom/pan</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Matplotlib</div>
+                        <div class="tech-purpose">Static chart generation for reporting</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">mplfinance</div>
+                        <div class="tech-purpose">Financial charting with candlestick support</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">Data Storage</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">SQLite</div>
+                        <div class="tech-purpose">Lightweight database for trades and strategies</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">PostgreSQL (Optional)</div>
+                        <div class="tech-purpose">Production-grade database for scaling</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">JSON Files</div>
+                        <div class="tech-purpose">Simple storage for Pine Script strategies</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">Redis (Optional)</div>
+                        <div class="tech-purpose">Caching and real-time data pub/sub</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">Pine Script Parsing</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">pyparsing</div>
+                        <div class="tech-purpose">Parser construction for Pine Script grammar</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">lark</div>
+                        <div class="tech-purpose">Alternative parser with EBNF grammar support</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">ast (Python stdlib)</div>
+                        <div class="tech-purpose">Abstract syntax tree manipulation</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">regex</div>
+                        <div class="tech-purpose">Pattern matching for token extraction</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">Concurrency & Threading</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">threading</div>
+                        <div class="tech-purpose">Separate threads for UI, trading, visualization</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">asyncio</div>
+                        <div class="tech-purpose">Async I/O for non-blocking operations</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">queue</div>
+                        <div class="tech-purpose">Thread-safe communication between modules</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">Configuration & Logging</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">PyYAML</div>
+                        <div class="tech-purpose">Configuration file management (config.yaml)</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">python-dotenv</div>
+                        <div class="tech-purpose">Environment variable management</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">logging (stdlib)</div>
+                        <div class="tech-purpose">Structured logging with rotating files</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">loguru</div>
+                        <div class="tech-purpose">Enhanced logging with better formatting</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">Testing & Quality</div>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-name">pytest</div>
+                        <div class="tech-purpose">Unit and integration testing framework</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">unittest.mock</div>
+                        <div class="tech-purpose">Mocking MT5 API for testing without broker</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">black</div>
+                        <div class="tech-purpose">Code formatting for consistency</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-name">pylint / flake8</div>
+                        <div class="tech-purpose">Code linting and quality checks</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-block">
+<span class="highlight"># Example: requirements.txt</span>
+
+MetaTrader5==5.0.45
+pandas==2.1.0
+numpy==1.25.2
+pandas-ta==0.3.14b
+plotly==5.17.0
+streamlit==1.28.0
+PyYAML==6.0.1
+python-dotenv==1.0.0
+loguru==0.7.2
+pyparsing==3.1.1
+pytest==7.4.2
+            </div>
+        </div>
+
+        <!-- DEPLOYMENT TAB -->
+        <div class="tab-content" id="deployment">
+            <h2 style="color: #00ff88; margin-bottom: 30px;">Deployment Architecture & Project Structure</h2>
+
+            <div class="module-detail">
+                <div class="module-header">📁 Project Directory Structure</div>
+                <pre class="code-block" style="white-space: pre; font-family: 'Courier New', monospace; line-height: 1.4;">
+ai-trading-bot/
+│
+├── main.py                          <span style="color: #888;"># Central orchestrator - application entry point</span>
+│
+├── config.yaml                      <span style="color: #888;"># Configuration file (symbols, timeframes, risk)</span>
+│
+├── .env                             <span style="color: #888;"># Environment variables (MT5 credentials)</span>
+│
+├── requirements.txt                 <span style="color: #888;"># Python dependencies</span>
+│
+├── modules/                         <span style="color: #888;"># Core application modules</span>
+│   ├── __init__.py
+│   ├── pine_script/                 <span style="color: #888;"># Pine Script engine</span>
+│   │   ├── __init__.py
+│   │   ├── parser.py                <span style="color: #888;"># Pine Script parser</span>
+│   │   ├── validator.py             <span style="color: #888;"># Syntax validator</span>
+│   │   ├── interpreter.py           <span style="color: #888;"># Runtime interpreter</span>
+│   │   └── visual_mapper.py         <span style="color: #888;"># Map plots to chart elements</span>
+│   │
+│   ├── trading/                     <span style="color: #888;"># Trading engine</span>
+│   │   ├── __init__.py
+│   │   ├── signal_generator.py      <span style="color: #888;"># Generate buy/sell signals</span>
+│   │   ├── risk_manager.py          <span style="color: #888;"># Risk and position sizing</span>
+│   │   ├── order_executor.py        <span style="color: #888;"># Execute orders via MT5</span>
+│   │   └── position_manager.py      <span style="color: #888;"># Track open positions</span>
+│   │
+│   ├── indicators/                  <span style="color: #888;"># Technical indicators library</span>
+│   │   ├── __init__.py
+│   │   ├── moving_averages.py       <span style="color: #888;"># SMA, EMA, WMA</span>
+│   │   ├── oscillators.py           <span style="color: #888;"># RSI, Stochastic, CCI</span>
+│   │   ├── volatility.py            <span style="color: #888;"># ATR, Bollinger Bands</span>
+│   │   └── trend.py                 <span style="color: #888;"># MACD, ADX</span>
+│   │
+│   ├── visualization/               <span style="color: #888;"># Chart rendering engine</span>
+│   │   ├── __init__.py
+│   │   ├── chart_renderer.py        <span style="color: #888;"># Candlestick charts</span>
+│   │   ├── indicator_overlay.py     <span style="color: #888;"># Plot indicators</span>
+│   │   └── signal_marker.py         <span style="color: #888;"># Mark entry/exit points</span>
+│   │
+│   ├── data/                        <span style="color: #888;"># Data management</span>
+│   │   ├── __init__.py
+│   │   ├── market_data_feed.py      <span style="color: #888;"># Live data stream</span>
+│   │   ├── historical_cache.py      <span style="color: #888;"># Cache historical data</span>
+│   │   └── mt5_connector.py         <span style="color: #888;"># MT5 API wrapper</span>
+│   │
+│   ├── storage/                     <span style="color: #888;"># Persistence layer</span>
+│   │   ├── __init__.py
+│   │   ├── strategy_repository.py   <span style="color: #888;"># Save/load Pine Scripts</span>
+│   │   ├── trade_logger.py          <span style="color: #888;"># Log trades to database</span>
+│   │   └── database.py              <span style="color: #888;"># SQLite/PostgreSQL interface</span>
+│   │
+│   └── ui/                          <span style="color: #888;"># User interface</span>
+│       ├── __init__.py
+│       ├── app.py                   <span style="color: #888;"># UI framework (Streamlit/Dash)</span>
+│       ├── components/              <span style="color: #888;"># UI components</span>
+│       │   ├── pine_editor.py       <span style="color: #888;"># Pine Script editor panel</span>
+│       │   ├── strategy_manager.py  <span style="color: #888;"># Strategy list/controls</span>
+│       │   ├── config_panel.py      <span style="color: #888;"># Configuration interface</span>
+│       │   ├── dashboard.py         <span style="color: #888;"># Monitoring dashboard</span>
+│       │   └── chart_viewer.py      <span style="color: #888;"># Live chart display</span>
+│       └── styles/                  <span style="color: #888;"># CSS/styling</span>
+│
+├── strategies/                      <span style="color: #888;"># Saved Pine Script strategies (JSON)</span>
+│   ├── strategy_1.json
+│   ├── strategy_2.json
+│   └── ...
+│
+├── logs/                            <span style="color: #888;"># Application logs</span>
+│   ├── system.log
+│   ├── trades.log
+│   └── errors.log
+│
+├── data/                            <span style="color: #888;"># Data storage</span>
+│   ├── trades.db                    <span style="color: #888;"># SQLite database</span>
+│   └── cache/                       <span style="color: #888;"># Cached market data</span>
+│
+├── tests/                           <span style="color: #888;"># Unit and integration tests</span>
+│   ├── __init__.py
+│   ├── test_pine_parser.py
+│   ├── test_indicators.py
+│   ├── test_trading_engine.py
+│   └── test_mt5_connector.py
+│
+├── docs/                            <span style="color: #888;"># Documentation</span>
+│   ├── architecture.md
+│   ├── pine_script_support.md
+│   └── api_reference.md
+│
+└── README.md                        <span style="color: #888;"># Project documentation</span>
+                </pre>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">🚀 Deployment Options</div>
+                
+                <div class="module-section">
+                    <div class="section-title">Option 1: Local Desktop Application</div>
+                    <div class="section-content">
+                        <strong>Best for:</strong> Personal use, direct MT5 access on same machine<br><br>
+                        
+                        <strong>Setup:</strong><br>
+                        • Install Python 3.10+ and MetaTrader 5 on same Windows machine<br>
+                        • Run bot locally: python main.py<br>
+                        • Access UI via localhost (Streamlit: http://localhost:8501)<br><br>
+                        
+                        <strong>Pros:</strong><br>
+                        • Simple setup, no server required<br>
+                        • Direct MT5 connection with low latency<br>
+                        • No hosting costs<br><br>
+                        
+                        <strong>Cons:</strong><br>
+                        • Computer must stay on 24/7<br>
+                        • No remote access<br>
+                        • Single user only
+                    </div>
+                </div>
+
+                <div class="module-section">
+                    <div class="section-title">Option 2: Cloud VPS (Virtual Private Server)</div>
+                    <div class="section-content">
+                        <strong>Best for:</strong> 24/7 operation, remote access, production use<br><br>
+                        
+                        <strong>Setup:</strong><br>
+                        • Rent Windows VPS (AWS EC2, DigitalOcean, Vultr)<br>
+                        • Install MT5 and Python on VPS<br>
+                        • Deploy bot as background service<br>
+                        • Access via VPS IP or domain<br><br>
+                        
+                        <strong>Pros:</strong><br>
+                        • 24/7 uptime without local computer<br>
+                        • Access from anywhere<br>
+                        • Scalable resources<br><br>
+                        
+                        <strong>Cons:</strong><br>
+                        • Monthly VPS costs ($10-50/month)<br>
+                        • Requires basic server management
+                    </div>
+                </div>
+
+                <div class="module-section">
+                    <div class="section-title">Option 3: Docker Container</div>
+                    <div class="section-content">
+                        <strong>Best for:</strong> Reproducible deployment, team environments<br><br>
+                        
+                        <strong>Setup:</strong><br>
+                        • Create Dockerfile for bot + dependencies<br>
+                        • Run MT5 in Wine (Linux) or Windows container<br>
+                        • Deploy to cloud (AWS ECS, Google Cloud Run, Azure Container Instances)<br><br>
+                        
+                        <strong>Pros:</strong><br>
+                        • Consistent environment across machines<br>
+                        • Easy scaling and updates<br>
+                        • Version control for infrastructure<br><br>
+                        
+                        <strong>Cons:</strong><br>
+                        • More complex setup<br>
+                        • MT5 in Wine can be tricky
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">🔧 Installation & Setup Commands</div>
+                <pre class="code-block" style="white-space: pre; font-family: 'Courier New', monospace; line-height: 1.8;">
+<span class="highlight"># 1. Clone repository</span>
+git clone https://github.com/yourusername/ai-trading-bot.git
+cd ai-trading-bot
+
+<span class="highlight"># 2. Create virtual environment</span>
+python -m venv venv
+source venv/bin/activate  <span style="color: #888;"># On Windows: venv\Scripts\activate</span>
+
+<span class="highlight"># 3. Install dependencies</span>
+pip install -r requirements.txt
+
+<span class="highlight"># 4. Configure environment variables</span>
+cp .env.example .env
+<span style="color: #888;"># Edit .env with your MT5 credentials</span>
+
+<span class="highlight"># 5. Initialize database</span>
+python -c "from modules.storage.database import init_db; init_db()"
+
+<span class="highlight"># 6. Run the application</span>
+python main.py
+
+<span class="highlight"># For Streamlit UI:</span>
+streamlit run modules/ui/app.py
+                </pre>
+            </div>
+
+            <div class="module-detail">
+                <div class="module-header">⚙️ Configuration File Example (config.yaml)</div>
+                <pre class="code-block" style="white-space: pre; font-family: 'Courier New', monospace; line-height: 1.8;">
+<span class="highlight"># Trading Configuration</span>
+trading:
+  default_symbol: "EURUSD"
+  default_timeframe: "M15"
+  execution_mode: "demo"  <span style="color: #888;"># demo or live</span>
+  
+  risk:
+    max_position_size_percent: 2.0
+    max_daily_trades: 10
+    max_concurrent_positions: 1
+    daily_loss_limit: 500.00
+    max_drawdown_percent: 10.0
+    
+  orders:
+    max_slippage_pips: 10
+    order_timeout_seconds: 30
+
+<span class="highlight"># MT5 Connection</span>
+mt5:
+  server: "MetaQuotes-Demo"
+  timeout: 60
+  retry_attempts: 3
+  retry_delay: 5
+
+<span class="highlight"># Visualization</span>
+visualization:
+  enabled: true
+  update_interval_seconds: 1
+  chart_history_candles: 100
+  
+<span class="highlight"># Logging</span>
+logging:
+  level: "INFO"  <span style="color: #888;"># DEBUG, INFO, WARNING, ERROR</span>
+  file_path: "logs/system.log"
+  max_file_size_mb: 10
+  backup_count: 5
+                </pre>
+            </div>
+
+            <div class="warning">
+                <strong>🔐 Security Best Practices:</strong><br>
+                • Never commit .env file with credentials to Git<br>
+                • Use environment variables for sensitive data<br>
+                • Enable 2FA on MT5 account<br>
+                • Run bot with limited account permissions<br>
+                • Regularly backup strategy files and trade logs<br>
+                • Test thoroughly on demo account before live trading
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab content
+            const selectedContent = document.getElementById(tabName);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+                
